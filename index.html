@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -187,6 +188,90 @@
     text-decoration: line-through;
   }
 
+  .collector-banner{
+    background: var(--gold-light);
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+  }
+  .collector-title{
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--gold);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .collector-row{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0;
+  }
+  .collector-name{
+    font-size: 15px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .collector-name.received{
+    color: var(--ink-soft);
+    text-decoration: line-through;
+  }
+  .collector-amount{
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--ink);
+  }
+
+  .aportes-title{
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+    font-weight: 700;
+    margin: 4px 0 8px;
+  }
+  .chips{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .chip{
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg);
+    border: 1.5px solid var(--line);
+    border-radius: 20px;
+    padding: 6px 10px 6px 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    user-select: none;
+    transition: all 0.15s;
+  }
+  .chip input{
+    width: 16px; height: 16px;
+    accent-color: var(--green);
+    cursor: pointer;
+    margin: 0;
+  }
+  .chip.paid{
+    background: var(--green-light);
+    border-color: var(--green);
+    color: var(--green);
+  }
+  .chip .chip-amount{
+    font-weight: 400;
+    color: var(--ink-soft);
+    font-size: 11px;
+  }
+  .chip.paid .chip-amount{ color: var(--green); }
+
   .share-btn{
     display: flex;
     align-items: center;
@@ -247,7 +332,7 @@
 <div class="wrap">
   <p class="eyebrow">Julio – octubre 2026</p>
   <h1>Nuestra tanda</h1>
-  <p class="subtitle">7 números · $1,000 cada uno</p>
+  <p class="subtitle">7 números · $7,000 cada quincena</p>
 
   <div class="status-bar" id="statusBar">
     <span id="statusText"></span>
@@ -279,22 +364,191 @@
 </div>
 
 <script>
-const TURNS = [
-  { id: 1, period: "16 – 31 jul 2026", people: [{ name: "Ivan", amount: 1000 }] },
-  { id: 2, period: "1 – 15 ago 2026", people: [{ name: "Yolanda", amount: 500 }, { name: "Deme", amount: 500 }] },
-  { id: 3, period: "16 – 31 ago 2026", people: [{ name: "Nico", amount: 1000 }] },
-  { id: 4, period: "1 – 15 sep 2026", people: [{ name: "Yoatzin", amount: 500 }, { name: "Jesus", amount: 500 }] },
-  { id: 5, period: "16 – 30 sep 2026", people: [{ name: "Jesus", amount: 1000 }] },
-  { id: 6, period: "1 – 15 oct 2026", people: [{ name: "Juan Carlos", amount: 1000 }] },
-  { id: 7, period: "16 – 31 oct 2026", people: [{ name: "Juan Carlos", amount: 1000 }] },
+// Cada quincena, LOS 7 NÚMEROS aportan $1,000 cada uno → se juntan $7,000
+// y esos $7,000 se los lleva completos quien tenga el turno de cobrar.
+// Esto se repite cada quincena, rotando el cobro, hasta que las 7 rondas
+// se completan.
+
+const PARTICIPANTS = [
+  { name: "Ivan", aporte: 1000 },
+  { name: "Yolanda", aporte: 500 },
+  { name: "Deme", aporte: 500 },
+  { name: "Nico", aporte: 1000 },
+  { name: "Yoatzin", aporte: 500 },
+  { name: "Jesus", aporte: 1500 },
+  { name: "Juan Carlos", aporte: 2000 },
 ];
-const TOTAL = TURNS.reduce((sum, t) => sum + t.people.reduce((s, p) => s + p.amount, 0), 0);
+
+const POT_PER_PERIOD = 7000;
+
+const PERIODS = [
+  { id: 1, period: "16 – 31 jul 2026", collectors: [{ name: "Ivan", amount: 7000 }] },
+  { id: 2, period: "1 – 15 ago 2026", collectors: [{ name: "Yolanda", amount: 3500 }, { name: "Deme", amount: 3500 }] },
+  { id: 3, period: "16 – 31 ago 2026", collectors: [{ name: "Nico", amount: 7000 }] },
+  { id: 4, period: "1 – 15 sep 2026", collectors: [{ name: "Yoatzin", amount: 3500 }, { name: "Jesus", amount: 3500 }] },
+  { id: 5, period: "16 – 30 sep 2026", collectors: [{ name: "Jesus", amount: 7000 }] },
+  { id: 6, period: "1 – 15 oct 2026", collectors: [{ name: "Juan Carlos", amount: 7000 }] },
+  { id: 7, period: "16 – 31 oct 2026", collectors: [{ name: "Juan Carlos", amount: 7000 }] },
+];
 
 let state = {};
 let saveInFlight = false;
 let pendingRetry = null;
 
-function personKey(turnId, idx){ return `${turnId}-${idx}`; }
+function paymentKey(periodId, name){ return `pay-${periodId}-${name}`; }
+function collectKey(periodId, idx){ return `collect-${periodId}-${idx}`; }
+
+function render(){
+  const timeline = document.getElementById("timeline");
+  timeline.innerHTML = "";
+
+  let closedCount = 0;
+  let totalCollected = 0;
+  const totalAllPeriods = PERIODS.length * POT_PER_PERIOD;
+
+  PERIODS.forEach((per) => {
+    const paymentsDone = PARTICIPANTS.every(p => state[paymentKey(per.id, p.name)]);
+    const deliveryDone = per.collectors.every((_, ci) => state[collectKey(per.id, ci)]);
+    const allDone = paymentsDone && deliveryDone;
+    if (allDone) closedCount++;
+
+    PARTICIPANTS.forEach(p => {
+      if (state[paymentKey(per.id, p.name)]) totalCollected += p.aporte;
+    });
+
+    const row = document.createElement("div");
+    row.className = "turn";
+
+    const badgeCol = document.createElement("div");
+    badgeCol.className = "badge-col";
+    const badge = document.createElement("div");
+    badge.className = "badge" + (allDone ? " done" : "");
+    badge.textContent = per.id;
+    badgeCol.appendChild(badge);
+    if (per.id !== PERIODS.length){
+      const conn = document.createElement("div");
+      conn.className = "connector";
+      badgeCol.appendChild(conn);
+    }
+    row.appendChild(badgeCol);
+
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const top = document.createElement("div");
+    top.className = "card-top";
+    const period = document.createElement("span");
+    period.className = "period";
+    period.textContent = per.period;
+    const amount = document.createElement("span");
+    amount.className = "amount";
+    amount.textContent = fmt(POT_PER_PERIOD);
+    top.appendChild(period);
+    top.appendChild(amount);
+    card.appendChild(top);
+
+    // Banner de quién cobra esta quincena
+    const banner = document.createElement("div");
+    banner.className = "collector-banner";
+    const bTitle = document.createElement("div");
+    bTitle.className = "collector-title";
+    bTitle.textContent = "Cobra esta quincena";
+    banner.appendChild(bTitle);
+    per.collectors.forEach((c, ci) => {
+      const key = collectKey(per.id, ci);
+      const received = !!state[key];
+      const cRow = document.createElement("div");
+      cRow.className = "collector-row";
+
+      const cName = document.createElement("span");
+      cName.className = "collector-name" + (received ? " received" : "");
+      cName.textContent = c.name;
+      const cAmt = document.createElement("span");
+      cAmt.className = "collector-amount";
+      cAmt.textContent = fmt(c.amount);
+      cName.appendChild(cAmt);
+
+      const label = document.createElement("label");
+      label.className = "check";
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.checked = received;
+      input.addEventListener("change", () => {
+        state[key] = input.checked;
+        saveState();
+        render();
+      });
+      label.appendChild(input);
+      label.appendChild(document.createTextNode(received ? "Entregado" : "Pendiente"));
+
+      cRow.appendChild(cName);
+      cRow.appendChild(label);
+      banner.appendChild(cRow);
+    });
+    card.appendChild(banner);
+
+    // Cuadrícula de aportaciones de los 7 números
+    const aTitle = document.createElement("div");
+    aTitle.className = "aportes-title";
+    aTitle.textContent = "Aportaciones de los 7 números";
+    card.appendChild(aTitle);
+
+    const chips = document.createElement("div");
+    chips.className = "chips";
+    PARTICIPANTS.forEach(p => {
+      const key = paymentKey(per.id, p.name);
+      const isPaid = !!state[key];
+
+      const chip = document.createElement("label");
+      chip.className = "chip" + (isPaid ? " paid" : "");
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.checked = isPaid;
+      input.addEventListener("change", () => {
+        state[key] = input.checked;
+        saveState();
+        render();
+      });
+      chip.appendChild(input);
+      chip.appendChild(document.createTextNode(p.name + " "));
+      const amt = document.createElement("span");
+      amt.className = "chip-amount";
+      amt.textContent = fmt(p.aporte);
+      chip.appendChild(amt);
+      chips.appendChild(chip);
+    });
+    card.appendChild(chips);
+
+    row.appendChild(card);
+    timeline.appendChild(row);
+  });
+
+  const circumference = 2 * Math.PI * 36;
+  const ring = document.getElementById("ring");
+  ring.setAttribute("stroke-dasharray", circumference.toFixed(1));
+  ring.setAttribute("stroke-dashoffset", (circumference * (1 - closedCount / PERIODS.length)).toFixed(1));
+  document.getElementById("ringLabel").textContent = `${closedCount}/${PERIODS.length}`;
+  document.getElementById("collectedAmount").textContent = fmt(totalCollected);
+  document.querySelector(".hero-text .lbl").textContent = `recaudados de ${fmt(totalAllPeriods)}`;
+}
+
+document.getElementById("shareBtn").addEventListener("click", () => {
+  let msg = "*Nuestra tanda* 💰\n7 números · $7,000 cada quincena\n\n";
+  PERIODS.forEach((per) => {
+    msg += `*${per.id}.* ${per.period}\n`;
+    msg += `   Cobra: ${per.collectors.map(c => c.name + " (" + fmt(c.amount) + ")").join(" + ")}\n`;
+    const deliveredAll = per.collectors.every((_, ci) => state[collectKey(per.id, ci)]);
+    msg += `   ${deliveredAll ? "✅ entregado" : "⬜ pendiente de entregar"}\n`;
+    const paidNames = PARTICIPANTS.filter(p => state[paymentKey(per.id, p.name)]).length;
+    msg += `   Aportaciones: ${paidNames}/${PARTICIPANTS.length} pagadas\n`;
+  });
+  const closedCount = PERIODS.filter(per =>
+    PARTICIPANTS.every(p => state[paymentKey(per.id, p.name)]) &&
+    per.collectors.every((_, ci) => state[collectKey(per.id, ci)])
+  ).length;
+  msg += `\n${closedCount} de ${PERIODS.length} quincenas cerradas por completo`;
+  window.open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank");
+});
 
 function setStatus(kind, text){
   const bar = document.getElementById("statusBar");
@@ -357,112 +611,6 @@ function showRetryButton(show){
 }
 
 function fmt(n){ return "$" + n.toLocaleString("es-MX"); }
-
-function render(){
-  const timeline = document.getElementById("timeline");
-  timeline.innerHTML = "";
-
-  let paidCount = 0;
-  let collected = 0;
-
-  TURNS.forEach((turn, ti) => {
-    const allPaid = turn.people.every((_, pi) => state[personKey(turn.id, pi)]);
-    if (allPaid) paidCount++;
-
-    const row = document.createElement("div");
-    row.className = "turn";
-
-    const badgeCol = document.createElement("div");
-    badgeCol.className = "badge-col";
-    const badge = document.createElement("div");
-    badge.className = "badge" + (allPaid ? " done" : "");
-    badge.textContent = turn.id;
-    badgeCol.appendChild(badge);
-    if (turn.id !== TURNS.length){
-      const conn = document.createElement("div");
-      conn.className = "connector";
-      badgeCol.appendChild(conn);
-    }
-    row.appendChild(badgeCol);
-
-    const card = document.createElement("div");
-    card.className = "card";
-
-    const top = document.createElement("div");
-    top.className = "card-top";
-    const period = document.createElement("span");
-    period.className = "period";
-    period.textContent = turn.period;
-    const amount = document.createElement("span");
-    amount.className = "amount";
-    amount.textContent = fmt(turn.people.reduce((s,p)=>s+p.amount,0));
-    top.appendChild(period);
-    top.appendChild(amount);
-    card.appendChild(top);
-
-    turn.people.forEach((p, pi) => {
-      const key = personKey(turn.id, pi);
-      const isPaid = !!state[key];
-      if (isPaid) collected += p.amount;
-
-      const pr = document.createElement("div");
-      pr.className = "person-row";
-
-      const nameSpan = document.createElement("span");
-      nameSpan.className = "person-name" + (isPaid ? " paid" : "");
-      nameSpan.textContent = p.name;
-      if (turn.people.length > 1){
-        const tag = document.createElement("span");
-        tag.className = "split-tag";
-        tag.textContent = fmt(p.amount);
-        nameSpan.appendChild(tag);
-      }
-
-      const label = document.createElement("label");
-      label.className = "check";
-      const input = document.createElement("input");
-      input.type = "checkbox";
-      input.checked = isPaid;
-      input.addEventListener("change", () => {
-        state[key] = input.checked;
-        saveState();
-        render();
-      });
-      label.appendChild(input);
-      label.appendChild(document.createTextNode(isPaid ? "Pagado" : "Pendiente"));
-
-      pr.appendChild(nameSpan);
-      pr.appendChild(label);
-      card.appendChild(pr);
-    });
-
-    row.appendChild(card);
-    timeline.appendChild(row);
-  });
-
-  const circumference = 2 * Math.PI * 36;
-  const ring = document.getElementById("ring");
-  ring.setAttribute("stroke-dasharray", circumference.toFixed(1));
-  ring.setAttribute("stroke-dashoffset", (circumference * (1 - paidCount / TURNS.length)).toFixed(1));
-  document.getElementById("ringLabel").textContent = `${paidCount}/${TURNS.length}`;
-  document.getElementById("collectedAmount").textContent = fmt(collected);
-}
-
-document.getElementById("shareBtn").addEventListener("click", () => {
-  let msg = "*Nuestra tanda* 💰\n7 números de $1,000\n\n";
-  TURNS.forEach((turn, ti) => {
-    msg += `*${turn.id}.* ${turn.period}\n`;
-    turn.people.forEach((p, pi) => {
-      const key = personKey(turn.id, pi);
-      const isPaid = !!state[key];
-      const tag = turn.people.length > 1 ? ` (${fmt(p.amount)})` : "";
-      msg += `   ${isPaid ? "✅" : "⬜"} ${p.name}${tag}\n`;
-    });
-  });
-  const paidCount = TURNS.filter((turn, ti) => turn.people.every((_, pi) => state[personKey(turn.id, pi)])).length;
-  msg += `\n${paidCount} de ${TURNS.length} turnos completados`;
-  window.open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank");
-});
 
 loadState();
 </script>
