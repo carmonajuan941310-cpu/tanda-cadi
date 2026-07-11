@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nuestra tanda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F5F7F2;
+    --card: #FFFFFF;
+    --ink: #1F2A22;
+    --ink-soft: #5B6960;
+    --green: #1F4D3D;
+    --green-light: #E5EFE8;
+    --gold: #C98A2C;
+    --gold-light: #FBF0DE;
+    --line: #DCE3D8;
+    --radius: 16px;
+  }
+  *{ box-sizing: border-box; }
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap{
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+  }
+  .eyebrow{
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
+  h1{
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .subtitle{
+    color: var(--ink-soft);
+    font-size: 14px;
+    margin: 0 0 24px;
+  }
+
+  .hero{
+    background: var(--green);
+    border-radius: 20px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    color: white;
+    margin-bottom: 24px;
+  }
+  .ring-wrap{ position: relative; width: 84px; height: 84px; flex-shrink: 0; }
+  .ring-wrap svg{ transform: rotate(-90deg); }
+  .ring-bg{ fill: none; stroke: rgba(255,255,255,0.18); stroke-width: 8; }
+  .ring-fg{ fill: none; stroke: #E8C468; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.4s ease; }
+  .ring-label{
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700;
+  }
+  .hero-text .num{
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .hero-text .lbl{
+    font-size: 13px;
+    color: rgba(255,255,255,0.75);
+    margin-top: 2px;
+  }
+
+  .timeline{ position: relative; }
+  .turn{
+    display: flex;
+    gap: 14px;
+    margin-bottom: 4px;
+  }
+  .badge-col{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 32px;
+    flex-shrink: 0;
+  }
+  .badge{
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--card);
+    border: 2px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--ink-soft);
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .badge.done{
+    background: var(--green);
+    border-color: var(--green);
+    color: white;
+  }
+  .connector{
+    width: 2px;
+    flex: 1;
+    background: var(--line);
+    margin: 2px 0;
+  }
+  .card{
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    flex: 1;
+    border: 1px solid var(--line);
+  }
+  .card-top{
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 2px;
+  }
+  .period{
+    font-size: 12px;
+    color: var(--ink-soft);
+    font-weight: 500;
+  }
+  .amount{
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--green);
+  }
+  .person-row{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-top: 1px solid var(--bg);
+  }
+  .person-row:first-of-type{ border-top: none; margin-top: 8px; }
+  .person-name{
+    font-size: 15px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .split-tag{
+    font-size: 10px;
+    background: var(--gold-light);
+    color: var(--gold);
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+  label.check{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--ink-soft);
+    font-weight: 500;
+  }
+  input[type="checkbox"]{
+    width: 20px; height: 20px;
+    accent-color: var(--green);
+    cursor: pointer;
+  }
+  .person-name.paid{
+    color: var(--ink-soft);
+    text-decoration: line-through;
+  }
+
+  .share-btn{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: #25D366;
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+    padding: 14px;
+    border-radius: 14px;
+    margin-top: 8px;
+    border: none;
+    width: 100%;
+    cursor: pointer;
+  }
+  .share-btn:active{ transform: scale(0.98); }
+
+  .note{
+    text-align: center;
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 14px;
+    line-height: 1.5;
+  }
+
+  .status-bar{
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 10px 14px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+  .status-bar.saving{ background: var(--gold-light); color: var(--gold); }
+  .status-bar.ok{ background: var(--green-light); color: var(--green); }
+  .status-bar.error{ background: #FBE7E5; color: #B43C2E; }
+  .status-bar.warn{ background: var(--gold-light); color: var(--gold); }
+  .retry-btn{
+    background: #B43C2E;
+    color: white;
+    border: none;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: none;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Julio – octubre 2026</p>
+  <h1>Nuestra tanda</h1>
+  <p class="subtitle">7 números · $1,000 cada uno</p>
+
+  <div class="status-bar" id="statusBar">
+    <span id="statusText"></span>
+    <button class="retry-btn" id="retryBtn" onclick="retrySave()">Reintentar</button>
+  </div>
+
+  <div class="hero">
+    <div class="ring-wrap">
+      <svg width="84" height="84" viewBox="0 0 84 84">
+        <circle class="ring-bg" cx="42" cy="42" r="36"></circle>
+        <circle class="ring-fg" id="ring" cx="42" cy="42" r="36" stroke-dasharray="226" stroke-dashoffset="226"></circle>
+      </svg>
+      <div class="ring-label" id="ringLabel">0/7</div>
+    </div>
+    <div class="hero-text">
+      <div class="num" id="collectedAmount">$0</div>
+      <div class="lbl">recaudados de $7,000</div>
+    </div>
+  </div>
+
+  <div class="timeline" id="timeline"></div>
+
+  <button class="share-btn" id="shareBtn">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.86.5 3.6 1.4 5.1L2 22l5.2-1.4c1.44.8 3.1 1.24 4.84 1.24 5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm5.83 14.03c-.24.68-1.4 1.3-1.93 1.38-.5.08-1.12.11-1.8-.11-.42-.13-.96-.31-1.65-.6-2.9-1.25-4.79-4.17-4.93-4.36-.14-.19-1.18-1.57-1.18-3 0-1.42.75-2.12 1.02-2.41.26-.28.57-.35.76-.35.19 0 .38 0 .55.01.18.01.42-.07.65.5.24.58.81 1.98.88 2.12.07.15.12.32.02.51-.09.19-.14.31-.28.48-.14.17-.29.37-.42.5-.14.14-.28.29-.12.57.16.28.73 1.2 1.57 1.95 1.08.96 1.99 1.26 2.28 1.4.29.14.46.12.63-.05.17-.17.71-.83.9-1.11.19-.28.38-.24.63-.14.26.09 1.64.77 1.92.91.28.14.47.21.53.33.07.12.07.68-.17 1.36z"/></svg>
+      Compartir estado por WhatsApp
+    </button>
+
+  <p class="note">Los datos se guardan para todo el grupo — cualquiera que abra este mismo enlace ve y puede actualizar los pagos.</p>
+</div>
+
+<script>
+const TURNS = [
+  { id: 1, period: "16 – 31 jul 2026", people: [{ name: "Ivan", amount: 1000 }] },
+  { id: 2, period: "1 – 15 ago 2026", people: [{ name: "Yolanda", amount: 500 }, { name: "Deme", amount: 500 }] },
+  { id: 3, period: "16 – 31 ago 2026", people: [{ name: "Nico", amount: 1000 }] },
+  { id: 4, period: "1 – 15 sep 2026", people: [{ name: "Yoatzin", amount: 500 }, { name: "Jesus", amount: 500 }] },
+  { id: 5, period: "16 – 30 sep 2026", people: [{ name: "Jesus", amount: 1000 }] },
+  { id: 6, period: "1 – 15 oct 2026", people: [{ name: "Juan Carlos", amount: 1000 }] },
+  { id: 7, period: "16 – 31 oct 2026", people: [{ name: "Juan Carlos", amount: 1000 }] },
+];
+const TOTAL = TURNS.reduce((sum, t) => sum + t.people.reduce((s, p) => s + p.amount, 0), 0);
+
+let state = {};
+let saveInFlight = false;
+let pendingRetry = null;
+
+function personKey(turnId, idx){ return `${turnId}-${idx}`; }
+
+function setStatus(kind, text){
+  const bar = document.getElementById("statusBar");
+  const textEl = document.getElementById("statusText");
+  bar.className = "status-bar " + kind;
+  textEl.textContent = text;
+  bar.style.display = "flex";
+  if (kind === "ok"){
+    clearTimeout(bar._hideTimer);
+    bar._hideTimer = setTimeout(() => { bar.style.display = "none"; }, 2200);
+  }
+}
+
+function retrySave(){
+  showRetryButton(false);
+  saveState(0);
+}
+
+async function loadState(){
+  try{
+    const res = await fetch("/api/estado");
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    state = await res.json();
+  }catch(e){
+    state = {};
+    setStatus("warn", "No se pudo cargar el estado guardado. Empezando en blanco.");
+  }
+  render();
+}
+
+async function saveState(retryCount){
+  retryCount = retryCount || 0;
+  saveInFlight = true;
+  showRetryButton(false);
+  setStatus("saving", "Guardando…");
+  try{
+    const res = await fetch("/api/estado", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(state),
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    saveInFlight = false;
+    setStatus("ok", "Guardado y sincronizado con el grupo ✓");
+  }catch(e){
+    console.error("No se pudo guardar", e);
+    saveInFlight = false;
+    if (retryCount < 2){
+      setStatus("saving", "Reintentando guardar…");
+      pendingRetry = setTimeout(() => saveState(retryCount + 1), 1200);
+    }else{
+      setStatus("error", "No se guardó en el servidor. Revisa tu conexión y toca \"Reintentar\".");
+      showRetryButton(true);
+    }
+  }
+}
+
+function showRetryButton(show){
+  document.getElementById("retryBtn").style.display = show ? "inline-block" : "none";
+}
+
+function fmt(n){ return "$" + n.toLocaleString("es-MX"); }
+
+function render(){
+  const timeline = document.getElementById("timeline");
+  timeline.innerHTML = "";
+
+  let paidCount = 0;
+  let collected = 0;
+
+  TURNS.forEach((turn, ti) => {
+    const allPaid = turn.people.every((_, pi) => state[personKey(turn.id, pi)]);
+    if (allPaid) paidCount++;
+
+    const row = document.createElement("div");
+    row.className = "turn";
+
+    const badgeCol = document.createElement("div");
+    badgeCol.className = "badge-col";
+    const badge = document.createElement("div");
+    badge.className = "badge" + (allPaid ? " done" : "");
+    badge.textContent = turn.id;
+    badgeCol.appendChild(badge);
+    if (turn.id !== TURNS.length){
+      const conn = document.createElement("div");
+      conn.className = "connector";
+      badgeCol.appendChild(conn);
+    }
+    row.appendChild(badgeCol);
+
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const top = document.createElement("div");
+    top.className = "card-top";
+    const period = document.createElement("span");
+    period.className = "period";
+    period.textContent = turn.period;
+    const amount = document.createElement("span");
+    amount.className = "amount";
+    amount.textContent = fmt(turn.people.reduce((s,p)=>s+p.amount,0));
+    top.appendChild(period);
+    top.appendChild(amount);
+    card.appendChild(top);
+
+    turn.people.forEach((p, pi) => {
+      const key = personKey(turn.id, pi);
+      const isPaid = !!state[key];
+      if (isPaid) collected += p.amount;
+
+      const pr = document.createElement("div");
+      pr.className = "person-row";
+
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "person-name" + (isPaid ? " paid" : "");
+      nameSpan.textContent = p.name;
+      if (turn.people.length > 1){
+        const tag = document.createElement("span");
+        tag.className = "split-tag";
+        tag.textContent = fmt(p.amount);
+        nameSpan.appendChild(tag);
+      }
+
+      const label = document.createElement("label");
+      label.className = "check";
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.checked = isPaid;
+      input.addEventListener("change", () => {
+        state[key] = input.checked;
+        saveState();
+        render();
+      });
+      label.appendChild(input);
+      label.appendChild(document.createTextNode(isPaid ? "Pagado" : "Pendiente"));
+
+      pr.appendChild(nameSpan);
+      pr.appendChild(label);
+      card.appendChild(pr);
+    });
+
+    row.appendChild(card);
+    timeline.appendChild(row);
+  });
+
+  const circumference = 2 * Math.PI * 36;
+  const ring = document.getElementById("ring");
+  ring.setAttribute("stroke-dasharray", circumference.toFixed(1));
+  ring.setAttribute("stroke-dashoffset", (circumference * (1 - paidCount / TURNS.length)).toFixed(1));
+  document.getElementById("ringLabel").textContent = `${paidCount}/${TURNS.length}`;
+  document.getElementById("collectedAmount").textContent = fmt(collected);
+}
+
+document.getElementById("shareBtn").addEventListener("click", () => {
+  let msg = "*Nuestra tanda* 💰\n7 números de $1,000\n\n";
+  TURNS.forEach((turn, ti) => {
+    msg += `*${turn.id}.* ${turn.period}\n`;
+    turn.people.forEach((p, pi) => {
+      const key = personKey(turn.id, pi);
+      const isPaid = !!state[key];
+      const tag = turn.people.length > 1 ? ` (${fmt(p.amount)})` : "";
+      msg += `   ${isPaid ? "✅" : "⬜"} ${p.name}${tag}\n`;
+    });
+  });
+  const paidCount = TURNS.filter((turn, ti) => turn.people.every((_, pi) => state[personKey(turn.id, pi)])).length;
+  msg += `\n${paidCount} de ${TURNS.length} turnos completados`;
+  window.open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank");
+});
+
+loadState();
+</script>
+</body>
+</html>

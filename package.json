@@ -1,0 +1,9 @@
+{
+  "name": "tanda-cadi",
+  "version": "1.0.0",
+  "private": true,
+  "description": "App para llevar el control de la tanda",
+  "dependencies": {
+    "@netlify/blobs": "^8.0.0"
+  }
+}
